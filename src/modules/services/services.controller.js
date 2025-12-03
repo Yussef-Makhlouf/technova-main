@@ -114,7 +114,9 @@ export const getServiceById = async (req, res, next) => {
 export const updateService = async (req, res, next) => {
 
   const id = req.params.id;
-
+  console.log(req.body);
+  console.log(id);
+  
   const service = await serviceModel.findById(id);
   if (!service) {
     return next(new CustomError("Service not found", 404));
