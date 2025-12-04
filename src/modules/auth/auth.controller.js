@@ -97,7 +97,8 @@ export const getAllUsers = async (req, res, next) => {
 
 export const addUser = async (req, res, next) => {
   const { userName, email, password, role } = req.body;
-
+  console.log(req.body);
+  
   // ? Validate required fields
   if (!userName || !email || !password || !role) {
     return next(new CustomError("All fields are required", 400));
@@ -254,78 +255,222 @@ export const logout = async (req, res, next) => {
 }
 
 export const forgetPassword = async (req, res, next) => {
-  const { email } = req.body
+  try {
+    const { email } = req.body
 
-  const isExist = await UserModel.findOne({ email })
-  if (!isExist) {
-    return res.status(400).json({ message: "Email not found" })
-  }
+    // Validate email input
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: "Email is required"
+      })
+    }
 
-  const code = nanoid()
-  const hashcode = pkg.hashSync(code, +process.env.SALT_ROUNDS) // ! process.env.SALT_ROUNDS
-  const token = generateToken({
-    payload: {
-      email,
-      sendCode: hashcode,
-    },
-    signature: process.env.RESET_TOKEN, // ! process.env.RESET_TOKEN
-    expiresIn: '1h',
-  })
-  const resetPasswordLink = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/en/reset-password/${token}`
-  const isEmailSent = sendEmailService({
-    to: email,
-    subject: "Reset Password",
-    message: emailTemplate({
-      link: resetPasswordLink,
-      linkData: "Click Here Reset Password",
+    // Check if user exists
+    const isExist = await UserModel.findOne({ email })
+    if (!isExist) {
+      return res.status(400).json({
+        success: false,
+        message: "Email not found"
+      })
+    }
+
+    // Generate reset code and token
+    const code = nanoid()
+    const hashcode = pkg.hashSync(code, +process.env.SALT_ROUNDS)
+    const token = generateToken({
+      payload: {
+        email,
+        // sendCode: hashcode,
+      },
+      signature: process.env.RESET_TOKEN,
+      expiresIn: '1h',
+    })
+
+    // Create reset password link
+    const resetPasswordLink = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/en/reset-password/${token}`
+
+    // Send email
+    const isEmailSent = sendEmailService({
+      to: email,
       subject: "Reset Password",
-    }),
-  })
-  if (!isEmailSent) {
-    return res.status(400).json({ message: "Email not found" })
-  }
+      message: emailTemplate({
+        link: resetPasswordLink,
+        linkData: "Click Here Reset Password",
+        subject: "Reset Password",
+      }),
+    })
 
-  const userupdete = await UserModel.findOneAndUpdate(
-    { email },
-    { forgetCode: hashcode },
-    { new: true },
-  )
-  return res.status(200).json({ message: "password changed", userupdete })
+    if (!isEmailSent) {
+      return res.status(500).json({
+        success: false,
+        message: "Failed to send reset email"
+      })
+    }
+
+    // Update user with forgetCode
+    await UserModel.findOneAndUpdate(
+      { email },
+      { forgetCode: hashcode },
+      { new: true },
+    )
+
+    return res.status(200).json({
+      success: true,
+      message: "Password reset link sent to your email"
+    })
+  } catch (error) {
+    console.error('Forget password error:', error)
+    return res.status(500).json({
+      success: false,
+      message: error.message || "An error occurred"
+    })
+  }
 }
 
 export const resetPassword = async (req, res, next) => {
-  const { token } = req.params
-  const decoded = verifyToken({ token, signature: process.env.RESET_TOKEN }) // ! process.env.RESET_TOKEN
+  try {
+    const { token } = req.params
+    const { password } = req.body
 
-  const user = await UserModel.findOne({
-    email: decoded?.email,
-  })
+    console.log('=== RESET PASSWORD DEBUG ===')
+    console.log('Token received:', token)
+    console.log('Password length:', password?.length)
 
-  if (!user) {
-    return res.status(400).json({ message: "you have already reset it, try to login" })
-  }
+    // Verify token
+    const decoded = verifyToken({ token, signature: process.env.RESET_TOKEN })
+    console.log('Decoded token:', decoded)
 
-  const { password } = req.body
-  const hashedPassword = pkg.hashSync(password, +process.env.SALT_ROUNDS)
-  user.password = hashedPassword,
+    if (!decoded || !decoded.email) {
+      console.log('Token validation failed - Invalid decoded data')
+      return res.status(400).json({
+        success: false,
+        message: "Invalid or expired reset token"
+      })
+    }
+
+    console.log('Looking for user with email:', decoded.email)
+
+
+    // Find user with matching email and forgetCode
+    const user = await UserModel.findOne({
+      email: decoded.email,
+      // forgetCode: decoded.sendCode
+
+    })
+    console.log(user)
+    console.log('User found:', user ? 'YES' : 'NO')
+    if (user) {
+      console.log('User email:', user.email)
+    } else {
+      // Try to find user by email only to see if they exist
+      const userByEmail = await UserModel.findOne({ email: decoded.email })
+      console.log('User exists by email:', userByEmail ? 'YES' : 'NO')
+      if (userByEmail) {
+      }
+    }
+
+    if (!user) {
+      console.log('User lookup failed - Token already used or codes dont match')
+      return res.status(400).json({
+        success: false,
+        message: "you have already reset it, try to login"
+      })
+    }
+
+    // Validate password
+    if (!password || password.length < 8) {
+      console.log('Password validation failed')
+      return res.status(400).json({
+        success: false,
+        message: "Password must be at least 8 characters"
+      })
+    }
+
+    // Hash and update password
+    const hashedPassword = pkg.hashSync(password, +process.env.SALT_ROUNDS)
+    user.password = hashedPassword
     user.forgetCode = null
 
-  const updatedUser = await user.save()
-  res.status(200).json({ message: "Done", updatedUser })
+    await user.save()
+    console.log('Password reset successful for:', user.email)
+    console.log('=== END DEBUG ===')
+
+    res.status(200).json({
+      success: true,
+      message: "Password reset successful"
+    })
+  } catch (error) {
+    console.error('Reset password error:', error)
+    return res.status(500).json({
+      message: error.message || "An error occurred while resetting password"
+    })
+  }
 }
 
 export const changePassword = async (req, res, next) => {
-  const { email, newPassword } = req.body
+  try {
+    console.log('=== CHANGE PASSWORD DEBUG ===')
+    console.log('Headers:', req.headers)
 
-  const userExsist = await UserModel.findOne({ email: email })
+    const { newPassword } = req.body
+    const token = req.headers.authorization?.replace('Bearer ', '')
 
-  if (!userExsist) {
-    return next(new CustomError("All fields are required", 400));
+    console.log('Extracted token:', token ? token.substring(0, 20) + '...' : 'NO TOKEN')
+
+    if (!token) {
+      console.log('❌ No token found')
+      return next(new CustomError("Authentication token is required", 401))
+    }
+
+    if (!newPassword) {
+      console.log('❌ No newPassword found')
+      return next(new CustomError("New password is required", 400))
+    }
+
+    // Verify and decode token
+    let decoded
+    try {
+      decoded = jwt.verify(token, process.env.SIGN_IN_TOKEN_SECRET)
+      console.log('✅ Token verified, decoded:', decoded)
+    } catch (error) {
+      console.log('❌ Token verification failed:', error.message)
+      return next(new CustomError("Invalid or expired token", 401))
+    }
+
+    if (!decoded || !decoded.email) {
+      console.log('❌ Invalid token payload')
+      return next(new CustomError("Invalid token payload", 401))
+    }
+
+    // Find user by email from token
+    const userExist = await UserModel.findOne({ email: decoded.email })
+
+    if (!userExist) {
+      console.log('❌ User not found:', decoded.email)
+      return next(new CustomError("User not found", 404))
+    }
+
+    console.log('✅ User found:', userExist.email)
+
+    // Hash the new password
+    const hashedPassword = pkg.hashSync(newPassword, +process.env.SALT_ROUNDS)
+
+    // Update user password
+    userExist.password = hashedPassword
+    await userExist.save()
+
+    console.log('✅ Password changed successfully')
+    console.log('=== END DEBUG ===')
+
+    res.status(200).json({
+      success: true,
+      message: "Password changed successfully"
+    })
+  } catch (error) {
+    console.error('Change password error:', error)
+    return next(new CustomError(error.message || "An error occurred while changing password", 500))
   }
-  const hashedPassword = pkg.hashSync(newPassword, +process.env.SALT_ROUNDS)
-
-  userExsist.password = hashedPassword
-  res.status(200).json({ success: true, message: "Password Changed", userExsist })
 }
 
 export const multyDeleteUsers = async (req, res, next) => {
@@ -340,6 +485,8 @@ export const multyDeleteUsers = async (req, res, next) => {
   if (Users.length === 0) {
     return next(new CustomError("No Users found for the provided IDs", 404));
   }
+
+  await UserModel.deleteMany({ _id: { $in: ids } });
 
   return res.status(200).json({
     success: true,
