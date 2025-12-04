@@ -195,3 +195,18 @@ export const applyToCareer = async (req, res, next) => {
         return next(new CustomError(error.message || "Error submitting application", 500));
     }
 };
+
+export const getCareerApplications = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const applications = await careerApplicationModel.find({ careerId: id }).sort({ createdAt: -1 });
+
+        res.status(200).json({
+            success: true,
+            message: "Applications retrieved successfully",
+            applications
+        });
+    } catch (error) {
+        return next(new CustomError("Error retrieving applications", 500));
+    }
+};

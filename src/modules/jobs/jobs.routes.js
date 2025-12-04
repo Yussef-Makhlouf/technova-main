@@ -18,4 +18,7 @@ careerRouter.post("/:id/apply",
     careerCon.applyToCareer
 );
 
+// Get applications for a career
+careerRouter.get("/:id/applications", careerCon.getCareerApplications);
+
 export default careerRouter;
