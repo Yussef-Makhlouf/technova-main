@@ -47,10 +47,6 @@ export const login = async (req, res, next) => {
     return next(new CustomError('user not found', 401))
   }
 
-  if (userExsist.isActive == false) {
-    return next(new CustomError('user is not active', 401))
-  }
-
 
   const passwordExsist = pkg.compareSync(password, userExsist.password)
 
@@ -125,7 +121,6 @@ export const addUser = async (req, res, next) => {
     email,
     password: hashedPassword,
     role,
-    isActive: "Active",
     customId,
   });
 
