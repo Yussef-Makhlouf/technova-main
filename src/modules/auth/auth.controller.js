@@ -296,9 +296,9 @@ export const forgetPassword = async (req, res, next) => {
 export const resetPassword = async (req, res, next) => {
   const { token } = req.params
   const decoded = verifyToken({ token, signature: process.env.RESET_TOKEN }) // ! process.env.RESET_TOKEN
+
   const user = await UserModel.findOne({
     email: decoded?.email,
-    forgetCode: decoded?.sendCode
   })
 
   if (!user) {
