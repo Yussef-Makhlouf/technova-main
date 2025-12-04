@@ -355,9 +355,9 @@ export const resetPassword = async (req, res, next) => {
     const user = await UserModel.findOne({
       email: decoded.email,
       // forgetCode: decoded.sendCode
-      
+
     })
-console.log(user)
+    console.log(user)
     console.log('User found:', user ? 'YES' : 'NO')
     if (user) {
       console.log('User email:', user.email)
@@ -402,24 +402,74 @@ console.log(user)
   } catch (error) {
     console.error('Reset password error:', error)
     return res.status(500).json({
-      success: false,
       message: error.message || "An error occurred while resetting password"
     })
   }
 }
 
 export const changePassword = async (req, res, next) => {
-  const { email, newPassword } = req.body
+  try {
+    console.log('=== CHANGE PASSWORD DEBUG ===')
+    console.log('Headers:', req.headers)
 
-  const userExsist = await UserModel.findOne({ email: email })
+    const { newPassword } = req.body
+    const token = req.headers.authorization?.replace('Bearer ', '')
 
-  if (!userExsist) {
-    return next(new CustomError("All fields are required", 400));
+    console.log('Extracted token:', token ? token.substring(0, 20) + '...' : 'NO TOKEN')
+
+    if (!token) {
+      console.log('❌ No token found')
+      return next(new CustomError("Authentication token is required", 401))
+    }
+
+    if (!newPassword) {
+      console.log('❌ No newPassword found')
+      return next(new CustomError("New password is required", 400))
+    }
+
+    // Verify and decode token
+    let decoded
+    try {
+      decoded = jwt.verify(token, process.env.SIGN_IN_TOKEN_SECRET)
+      console.log('✅ Token verified, decoded:', decoded)
+    } catch (error) {
+      console.log('❌ Token verification failed:', error.message)
+      return next(new CustomError("Invalid or expired token", 401))
+    }
+
+    if (!decoded || !decoded.email) {
+      console.log('❌ Invalid token payload')
+      return next(new CustomError("Invalid token payload", 401))
+    }
+
+    // Find user by email from token
+    const userExist = await UserModel.findOne({ email: decoded.email })
+
+    if (!userExist) {
+      console.log('❌ User not found:', decoded.email)
+      return next(new CustomError("User not found", 404))
+    }
+
+    console.log('✅ User found:', userExist.email)
+
+    // Hash the new password
+    const hashedPassword = pkg.hashSync(newPassword, +process.env.SALT_ROUNDS)
+
+    // Update user password
+    userExist.password = hashedPassword
+    await userExist.save()
+
+    console.log('✅ Password changed successfully')
+    console.log('=== END DEBUG ===')
+
+    res.status(200).json({
+      success: true,
+      message: "Password changed successfully"
+    })
+  } catch (error) {
+    console.error('Change password error:', error)
+    return next(new CustomError(error.message || "An error occurred while changing password", 500))
   }
-  const hashedPassword = pkg.hashSync(newPassword, +process.env.SALT_ROUNDS)
-
-  userExsist.password = hashedPassword
-  res.status(200).json({ success: true, message: "Password Changed", userExsist })
 }
 
 export const multyDeleteUsers = async (req, res, next) => {
@@ -434,6 +484,8 @@ export const multyDeleteUsers = async (req, res, next) => {
   if (Users.length === 0) {
     return next(new CustomError("No Users found for the provided IDs", 404));
   }
+
+  await UserModel.deleteMany({ _id: { $in: ids } });
 
   return res.status(200).json({
     success: true,
