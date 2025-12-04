@@ -259,64 +259,158 @@ export const logout = async (req, res, next) => {
 }
 
 export const forgetPassword = async (req, res, next) => {
-  const { email } = req.body
+  try {
+    const { email } = req.body
 
-  const isExist = await UserModel.findOne({ email })
-  if (!isExist) {
-    return res.status(400).json({ message: "Email not found" })
-  }
+    // Validate email input
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: "Email is required"
+      })
+    }
 
-  const code = nanoid()
-  const hashcode = pkg.hashSync(code, +process.env.SALT_ROUNDS) // ! process.env.SALT_ROUNDS
-  const token = generateToken({
-    payload: {
-      email,
-      sendCode: hashcode,
-    },
-    signature: process.env.RESET_TOKEN, // ! process.env.RESET_TOKEN
-    expiresIn: '1h',
-  })
-  const resetPasswordLink = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/en/reset-password/${token}`
-  const isEmailSent = sendEmailService({
-    to: email,
-    subject: "Reset Password",
-    message: emailTemplate({
-      link: resetPasswordLink,
-      linkData: "Click Here Reset Password",
+    // Check if user exists
+    const isExist = await UserModel.findOne({ email })
+    if (!isExist) {
+      return res.status(400).json({
+        success: false,
+        message: "Email not found"
+      })
+    }
+
+    // Generate reset code and token
+    const code = nanoid()
+    const hashcode = pkg.hashSync(code, +process.env.SALT_ROUNDS)
+    const token = generateToken({
+      payload: {
+        email,
+        // sendCode: hashcode,
+      },
+      signature: process.env.RESET_TOKEN,
+      expiresIn: '1h',
+    })
+
+    // Create reset password link
+    const resetPasswordLink = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/en/reset-password/${token}`
+
+    // Send email
+    const isEmailSent = sendEmailService({
+      to: email,
       subject: "Reset Password",
-    }),
-  })
-  if (!isEmailSent) {
-    return res.status(400).json({ message: "Email not found" })
-  }
+      message: emailTemplate({
+        link: resetPasswordLink,
+        linkData: "Click Here Reset Password",
+        subject: "Reset Password",
+      }),
+    })
 
-  const userupdete = await UserModel.findOneAndUpdate(
-    { email },
-    { forgetCode: hashcode },
-    { new: true },
-  )
-  return res.status(200).json({ message: "password changed", userupdete })
+    if (!isEmailSent) {
+      return res.status(500).json({
+        success: false,
+        message: "Failed to send reset email"
+      })
+    }
+
+    // Update user with forgetCode
+    await UserModel.findOneAndUpdate(
+      { email },
+      { forgetCode: hashcode },
+      { new: true },
+    )
+
+    return res.status(200).json({
+      success: true,
+      message: "Password reset link sent to your email"
+    })
+  } catch (error) {
+    console.error('Forget password error:', error)
+    return res.status(500).json({
+      success: false,
+      message: error.message || "An error occurred"
+    })
+  }
 }
 
 export const resetPassword = async (req, res, next) => {
-  const { token } = req.params
-  const decoded = verifyToken({ token, signature: process.env.RESET_TOKEN }) // ! process.env.RESET_TOKEN
-  const user = await UserModel.findOne({
-    email: decoded?.email,
-    forgetCode: decoded?.sendCode
-  })
+  try {
+    const { token } = req.params
+    const { password } = req.body
 
-  if (!user) {
-    return res.status(400).json({ message: "you have already reset it, try to login" })
-  }
+    console.log('=== RESET PASSWORD DEBUG ===')
+    console.log('Token received:', token)
+    console.log('Password length:', password?.length)
 
-  const { password } = req.body
-  const hashedPassword = pkg.hashSync(password, +process.env.SALT_ROUNDS)
-  user.password = hashedPassword,
+    // Verify token
+    const decoded = verifyToken({ token, signature: process.env.RESET_TOKEN })
+    console.log('Decoded token:', decoded)
+
+    if (!decoded || !decoded.email) {
+      console.log('Token validation failed - Invalid decoded data')
+      return res.status(400).json({
+        success: false,
+        message: "Invalid or expired reset token"
+      })
+    }
+
+    console.log('Looking for user with email:', decoded.email)
+
+
+    // Find user with matching email and forgetCode
+    const user = await UserModel.findOne({
+      email: decoded.email,
+      // forgetCode: decoded.sendCode
+      
+    })
+console.log(user)
+    console.log('User found:', user ? 'YES' : 'NO')
+    if (user) {
+      console.log('User email:', user.email)
+    } else {
+      // Try to find user by email only to see if they exist
+      const userByEmail = await UserModel.findOne({ email: decoded.email })
+      console.log('User exists by email:', userByEmail ? 'YES' : 'NO')
+      if (userByEmail) {
+      }
+    }
+
+    if (!user) {
+      console.log('User lookup failed - Token already used or codes dont match')
+      return res.status(400).json({
+        success: false,
+        message: "you have already reset it, try to login"
+      })
+    }
+
+    // Validate password
+    if (!password || password.length < 8) {
+      console.log('Password validation failed')
+      return res.status(400).json({
+        success: false,
+        message: "Password must be at least 8 characters"
+      })
+    }
+
+    // Hash and update password
+    const hashedPassword = pkg.hashSync(password, +process.env.SALT_ROUNDS)
+    user.password = hashedPassword
     user.forgetCode = null
 
-  const updatedUser = await user.save()
-  res.status(200).json({ message: "Done", updatedUser })
+    await user.save()
+    console.log('Password reset successful for:', user.email)
+    console.log('=== END DEBUG ===')
+
+    res.status(200).json({
+      success: true,
+      message: "Password reset successful"
+    })
+  } catch (error) {
+    console.error('Reset password error:', error)
+    return res.status(500).json({
+      success: false,
+      message: error.message || "An error occurred while resetting password"
+    })
+  }
 }
 
 export const changePassword = async (req, res, next) => {
