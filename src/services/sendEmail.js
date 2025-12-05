@@ -6,16 +6,25 @@ export async function sendEmailService({
   message,
   attachments = [],
 } = {}) {
-  // configurations  
+  // Parse port and determine secure setting automatically
+  const smtpPort = parseInt(process.env.SMTP_PORT) || 587;
+  const isSecure = smtpPort === 465; // True for port 465, false for 587 (STARTTLS)
+
+  console.log(`📧 SMTP Config: Host=${process.env.SMTP_HOST}, Port=${smtpPort}, Secure=${isSecure}`);
+
+  // Create transporter with proper timeout settings
   const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST, // smtp.gmail.com
-    port: process.env.SMTP_PORT, // 587 , 465
-    secure: false, // false , true
+    host: process.env.SMTP_HOST || 'mail.globaltechnova.com',
+    port: smtpPort,
+    secure: isSecure,
     auth: {
-      // credentials
       user: process.env.SMTP_USER,
       pass: process.env.SMTP_PASS,
     },
+    // Connection timeout settings to prevent Gateway Timeout errors
+    connectionTimeout: 30000, // 30 seconds
+    greetingTimeout: 30000,   // 30 seconds
+    socketTimeout: 60000,     // 60 seconds
   })
 
   const emailInfo = await transporter.sendMail({
@@ -36,16 +45,22 @@ export async function sendEmailService({
 
 // Generate a random 5-digit code
 export const sendVerificationEmail = async (toEmail, verificationCode) => {
+  // Parse port and determine secure setting automatically
+  const smtpPort = parseInt(process.env.SMTP_PORT) || 587;
+  const isSecure = smtpPort === 465; // True for port 465, false for 587 (STARTTLS)
 
-  
   const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: process.env.SMTP_PORT,
-    secure: false, // Use TLS
+    host: process.env.SMTP_HOST || 'mail.globaltechnova.com',
+    port: smtpPort,
+    secure: isSecure,
     auth: {
       user: process.env.SMTP_USER,
       pass: process.env.SMTP_PASS,
     },
+    // Connection timeout settings
+    connectionTimeout: 30000,
+    greetingTimeout: 30000,
+    socketTimeout: 60000,
   });
 
   const mailOptions = {
@@ -91,7 +106,7 @@ export const sendVerificationEmail = async (toEmail, verificationCode) => {
       </div>
     `,
   };
-  
+
 
   await transporter.sendMail(mailOptions);
 };
