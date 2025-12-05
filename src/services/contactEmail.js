@@ -161,14 +161,23 @@ const createEmailTemplate = ({ name, email, phone, services, message }) => {
 };
 
 export const sendContactUsEmailService = async ({ name, email, phone, services, message }) => {
+  // Create transporter with proper timeout settings to prevent 504 Gateway Timeout
   const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST || 'smtp.hostinger.com',
-    port: process.env.SMTP_PORT || 465,
+    host: process.env.SMTP_HOST || 'mail.globaltechnova.com',
+    port: parseInt(process.env.SMTP_PORT) || 465,
     secure: true,
     auth: {
       user: process.env.SMTP_USER || 'Info@globaltechnova.com',
       pass: process.env.SMTP_PASS || 'Technova@123',
     },
+    // Connection timeout settings
+    connectionTimeout: 30000, // 30 seconds to connect
+    greetingTimeout: 30000,   // 30 seconds for greeting
+    socketTimeout: 60000,     // 60 seconds for socket operations
+    // Pool settings for better performance
+    pool: true,
+    maxConnections: 3,
+    maxMessages: 100,
   });
 
   const mailOptions = {

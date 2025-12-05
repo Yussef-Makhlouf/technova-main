@@ -18,10 +18,15 @@ export const sendContactUsEmail = async (req, res, next) => {
     return next(new CustomError("Invalid email format", 400));
   }
 
-  await sendContactUsEmailService({ name, email, phone, services: servicesArray, message });
+  try {
+    await sendContactUsEmailService({ name, email, phone, services: servicesArray, message });
 
-  return res.status(200).json({
-    success: true,
-    message: "Email sent successfully"
-  });
+    return res.status(200).json({
+      success: true,
+      message: "Email sent successfully"
+    });
+  } catch (error) {
+    console.error("Error sending contact email:", error);
+    return next(new CustomError("Failed to send email. Please try again later.", 500));
+  }
 };
