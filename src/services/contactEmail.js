@@ -182,12 +182,12 @@ export const sendContactUsEmailService = async ({ name, email, phone, services, 
 
   // Create transporter with proper timeout settings to prevent 504 Gateway Timeout
   const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST || 'mail.globaltechnova.com',
+    host: 'sh00579.bluehost.com',
     port: smtpPort,
     secure: isSecure,
     auth: {
-      user: process.env.SMTP_USER || 'Info@globaltechnova.com',
-      pass: process.env.SMTP_PASS || 'Technova@123',
+      user:  'info@globaltechnova.com',
+      pass:  'Technova@123',
     },
     // Connection timeout settings
     connectionTimeout: 30000, // 30 seconds to connect
