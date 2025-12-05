@@ -96,8 +96,8 @@ export const getAllUsers = async (req, res, next) => {
 }
 
 export const addUser = async (req, res, next) => {
-  const { userName, email, password, role } = req.body;
   console.log(req.body);
+  const { userName, email, password, role } = req.body;
   
   // ? Validate required fields
   if (!userName || !email || !password || !role) {
@@ -414,6 +414,8 @@ export const changePassword = async (req, res, next) => {
     console.log('Headers:', req.headers)
 
     const { newPassword } = req.body
+    console.log(newPassword);
+    
     const token = req.headers.authorization?.replace('Bearer ', '')
 
     console.log('Extracted token:', token ? token.substring(0, 20) + '...' : 'NO TOKEN')
