@@ -49,7 +49,7 @@ const swaggerSpec = swaggerJSDoc({
         description: "Local Server",
       },
       {
-        url: "https://techvoba.vercel.app/",
+        url: "https://api.globaltechnova.com/api/v1",
         description: "Production Server",
       },
     ],

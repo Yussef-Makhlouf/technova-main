@@ -1,7 +1,7 @@
 import nodemailer from 'nodemailer'
 
 // TECHNOVA Futuristic Email Template
-const createEmailTemplate = ({ name, email, phone, services, message }) => {
+const createEmailTemplate = ({ name, email, phone, services, projects, message }) => {
   // Format services array into display string
   const servicesDisplay = Array.isArray(services) && services.length > 0
     ? services.join(', ')
@@ -117,6 +117,20 @@ const createEmailTemplate = ({ name, email, phone, services, message }) => {
                   </td>
                 </tr>
                 
+                <!-- Products Interested -->
+                ${Array.isArray(projects) && projects.length > 0 ? `
+                <tr>
+                  <td style="padding: 20px 25px; border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
+                    <p style="margin: 0 0 12px 0; color: #6b7280; font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">🚀 AI Products Interest</p>
+                    <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                      ${projects.map(product => `
+                        <span style="display: inline-block; padding: 6px 14px; background: linear-gradient(135deg, rgba(236, 72, 153, 0.15), rgba(139, 92, 246, 0.15)); border: 1px solid rgba(236, 72, 153, 0.3); border-radius: 20px; color: #f472b6; font-size: 13px; font-weight: 500; margin: 4px 4px 4px 0;">${product}</span>
+                      `).join('')}
+                    </div>
+                  </td>
+                </tr>
+                ` : ''}
+                
               </table>
             </td>
           </tr>
@@ -160,7 +174,7 @@ const createEmailTemplate = ({ name, email, phone, services, message }) => {
   `;
 };
 
-export const sendContactUsEmailService = async ({ name, email, phone, services, message }) => {
+export const sendContactUsEmailService = async ({ name, email, phone, services, projects, message }) => {
   // Create transporter with proper timeout settings to prevent 504 Gateway Timeout
   const transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST || 'mail.globaltechnova.com',

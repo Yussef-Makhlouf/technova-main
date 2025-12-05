@@ -3,10 +3,12 @@ import CustomError from "../../utilities/customError.js"
 
 export const sendContactUsEmail = async (req, res, next) => {
 
-  const { name, email, phone, message, service, services } = req.body;
+  const { name, email, phone, message, service, services, projects } = req.body;
 
   // Support both 'service' (string) and 'services' (array) for backwards compatibility
   const servicesArray = services || (service ? [service] : []);
+  // Handle projects array (optional field)
+  const projectsArray = Array.isArray(projects) ? projects : [];
 
   if (!name || !email || !phone || !message || servicesArray.length === 0) {
     return next(new CustomError("Please provide name, email, message and at least one service", 400));
@@ -19,7 +21,7 @@ export const sendContactUsEmail = async (req, res, next) => {
   }
 
   try {
-    await sendContactUsEmailService({ name, email, phone, services: servicesArray, message });
+    await sendContactUsEmailService({ name, email, phone, services: servicesArray, projects: projectsArray, message });
 
     return res.status(200).json({
       success: true,
