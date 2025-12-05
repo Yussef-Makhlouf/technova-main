@@ -6,7 +6,7 @@ import CustomError from "../../utilities/customError.js"
 import imagekit, { destroyImage } from "../../utilities/imagekitConfigration.js"
 import jwt from "jsonwebtoken"
 import { emailTemplate } from "../../utilities/emailTemplate.js"
-// import { sendEmailService } from "../../services/sendEmail.js"
+import { sendEmailService } from "../../services/sendEmail.js"
 
 export const register = async (req, res, next) => {
 
