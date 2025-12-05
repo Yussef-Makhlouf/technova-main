@@ -287,7 +287,7 @@ export const forgetPassword = async (req, res, next) => {
     })
 
     // Create reset password link
-    const resetPasswordLink = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/en/reset-password/${token}`
+    const resetPasswordLink = `https://globaltechnova.com/en/reset-password/${token}`
 
     // Send email
     const isEmailSent = sendEmailService({
