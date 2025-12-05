@@ -8,10 +8,9 @@ export async function sendEmailService({
 } = {}) {
   // configurations  
   const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com', // smtp.gmail.com
-    port: 587, // 587 , 465
+    host: process.env.SMTP_HOST, // smtp.gmail.com
+    port: process.env.SMTP_PORT, // 587 , 465
     secure: false, // false , true
-    service: 'gmail', // optional
     auth: {
       // credentials
       user: process.env.SMTP_USER,
