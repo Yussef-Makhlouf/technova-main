@@ -178,34 +178,37 @@ export const sendContactUsEmailService = async ({ name, email, phone, services, 
   const smtpPort = parseInt(process.env.SMTP_PORT) || 465;
   const isSecure = smtpPort === 465; // True for 465, false for other ports
 
-  console.log(`📧 Configuring SMTP Transport: Host=${process.env.SMTP_HOST || 'mail.globaltechnova.com'}, Port=${smtpPort}, Secure=${isSecure}`);
+  console.log(`📧 Contact Form - SMTP Config: Host=${process.env.SMTP_HOST || 'smtp.titan.email'}, Port=${smtpPort}, Secure=${isSecure}`);
 
   // Create transporter with proper timeout settings to prevent 504 Gateway Timeout
   const transporter = nodemailer.createTransport({
-    host: 'sh00579.bluehost.com',
+    host: process.env.SMTP_HOST || 'smtp.titan.email',
     port: smtpPort,
     secure: isSecure,
     auth: {
-      user:  'info@globaltechnova.com',
-      pass:  'Technova@123',
+      user: process.env.SMTP_USER || 'info@globaltechnova.com',
+      pass: process.env.SMTP_PASS,
     },
-    // Connection timeout settings
-    connectionTimeout: 30000, // 30 seconds to connect
-    greetingTimeout: 30000,   // 30 seconds for greeting
-    socketTimeout: 60000,     // 60 seconds for socket operations
-    // Pool settings for better performance
-    pool: true,
-    maxConnections: 3,
-    maxMessages: 100,
+    // TLS options to handle certificate issues
+    tls: {
+      rejectUnauthorized: false,
+      minVersion: 'TLSv1.2'
+    },
+    // Connection timeout settings (reduced for faster failure detection)
+    connectionTimeout: 15000, // 15 seconds to connect
+    greetingTimeout: 15000,   // 15 seconds for greeting
+    socketTimeout: 30000,     // 30 seconds for socket operations
+    // Disable pooling for simpler connection handling
+    pool: false,
     // Debug output
     debug: true,
     logger: true
   });
 
   const mailOptions = {
-    from: `"TECHNOVA Contact" <Info@globaltechnova.com>`,
+    from: `"TECHNOVA Contact" <info@globaltechnova.com>`,
     replyTo: `"${name}" <${email}>`,
-    to: process.env.OWNER || 'Info@globaltechnova.com',
+    to: process.env.OWNER || 'info@globaltechnova.com',
     subject: `✨ New Contact Message from ${name}`,
     html: createEmailTemplate({ name, email, phone, services, projects, message }),
   };
