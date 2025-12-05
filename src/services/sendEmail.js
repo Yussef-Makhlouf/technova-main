@@ -129,11 +129,11 @@ export async function sendEmailService({
   const smtpPort = parseInt(process.env.SMTP_PORT) || 465;
   const isSecure = smtpPort === 465; // True for port 465, false for 587 (STARTTLS)
 
-  console.log(`📧 Password Reset - SMTP Config: Host=${process.env.SMTP_HOST || 'mail.globaltechnova.com'}, Port=${smtpPort}, Secure=${isSecure}`);
+  console.log(`📧 Password Reset - SMTP Config: Host=${process.env.SMTP_HOST || 'smtp.titan.email'}, Port=${smtpPort}, Secure=${isSecure}`);
 
   // Create transporter with same settings as contactEmail.js
   const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST || 'mail.globaltechnova.com',
+    host: process.env.SMTP_HOST || 'smtp.titan.email',
     port: smtpPort,
     secure: isSecure,
     auth: {
@@ -179,7 +179,7 @@ export const sendPasswordResetEmail = async (toEmail, resetLink) => {
   console.log(`📧 Sending password reset email to: ${toEmail}`);
 
   const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST || 'mail.globaltechnova.com',
+    host: process.env.SMTP_HOST || 'smtp.titan.email',
     port: smtpPort,
     secure: isSecure,
     auth: {
@@ -226,7 +226,7 @@ export const sendVerificationEmail = async (toEmail, verificationCode) => {
   const isSecure = smtpPort === 465;
 
   const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST || 'mail.globaltechnova.com',
+    host: process.env.SMTP_HOST || 'smtp.titan.email',
     port: smtpPort,
     secure: isSecure,
     auth: {

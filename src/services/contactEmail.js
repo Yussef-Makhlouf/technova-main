@@ -178,11 +178,11 @@ export const sendContactUsEmailService = async ({ name, email, phone, services, 
   const smtpPort = parseInt(process.env.SMTP_PORT) || 465;
   const isSecure = smtpPort === 465; // True for 465, false for other ports
 
-  console.log(`📧 Contact Form - SMTP Config: Host=${process.env.SMTP_HOST || 'mail.globaltechnova.com'}, Port=${smtpPort}, Secure=${isSecure}`);
+  console.log(`📧 Contact Form - SMTP Config: Host=${process.env.SMTP_HOST || 'smtp.titan.email'}, Port=${smtpPort}, Secure=${isSecure}`);
 
   // Create transporter with proper timeout settings to prevent 504 Gateway Timeout
   const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST || 'mail.globaltechnova.com',
+    host: process.env.SMTP_HOST || 'smtp.titan.email',
     port: smtpPort,
     secure: isSecure,
     auth: {
