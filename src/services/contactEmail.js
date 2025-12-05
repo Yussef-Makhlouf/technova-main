@@ -178,15 +178,15 @@ export const sendContactUsEmailService = async ({ name, email, phone, services, 
   const smtpPort = parseInt(process.env.SMTP_PORT) || 465;
   const isSecure = smtpPort === 465; // True for 465, false for other ports
 
-  console.log(`📧 Configuring SMTP Transport: Host=${process.env.SMTP_HOST || 'mail.globaltechnova.com'}, Port=${smtpPort}, Secure=${isSecure}`);
+  console.log(`📧 Configuring SMTP Transport: Host=${process.env.SMTP_HOST || 'sh00579.bluehost.com'}, Port=${smtpPort}, Secure=${isSecure}`);
 
   // Create transporter with proper timeout settings to prevent 504 Gateway Timeout
   const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST || 'mail.globaltechnova.com',
+    host: process.env.SMTP_HOST || 'sh00579.bluehost.com',
     port: smtpPort,
     secure: isSecure,
     auth: {
-      user: process.env.SMTP_USER || 'Info@globaltechnova.com',
+      user: process.env.SMTP_USER || 'info@globaltechnova.com',
       pass: process.env.SMTP_PASS || 'Technova@123',
     },
     // Connection timeout settings
@@ -203,9 +203,9 @@ export const sendContactUsEmailService = async ({ name, email, phone, services, 
   });
 
   const mailOptions = {
-    from: `"TECHNOVA Contact" <Info@globaltechnova.com>`,
+    from: `"TECHNOVA Contact" <info@globaltechnova.com>`,
     replyTo: `"${name}" <${email}>`,
-    to: process.env.OWNER || 'Info@globaltechnova.com',
+    to: process.env.OWNER || 'info@globaltechnova.com',
     subject: `✨ New Contact Message from ${name}`,
     html: createEmailTemplate({ name, email, phone, services, projects, message }),
   };
