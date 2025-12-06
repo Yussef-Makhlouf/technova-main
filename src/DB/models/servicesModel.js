@@ -4,6 +4,9 @@ import { Schema, model } from "mongoose";
 
 const ServiceSchema = new Schema(
   {
+    // 🔥 SLUG (for URL-friendly identification)
+    slug: { type: String, unique: true, sparse: true },
+
     // 🔥 NAME
     name_ar: { type: String, required: true },
     name_en: { type: String, required: true },

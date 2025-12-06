@@ -53,8 +53,12 @@ export const createService = async (req, res, next) => {
     });
   }
 
+  // 🔥 Generate unique slug from English name
+  const slug = slugify(name_en, { lower: true, strict: true }) + '-' + nanoid();
+
   // 🔥 Create new service document
   const newService = new serviceModel({
+    slug,
     name_ar,
     name_en,
     features: feature_ar && feature_en
@@ -116,7 +120,7 @@ export const updateService = async (req, res, next) => {
   const id = req.params.id;
   console.log(req.body);
   console.log(id);
-  
+
   const service = await serviceModel.findById(id);
   if (!service) {
     return next(new CustomError("Service not found", 404));
