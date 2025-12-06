@@ -6,7 +6,7 @@ import CustomError from "../../utilities/customError.js"
 import imagekit, { destroyImage } from "../../utilities/imagekitConfigration.js"
 import jwt from "jsonwebtoken"
 import { emailTemplate } from "../../utilities/emailTemplate.js"
-// import { sendEmailService } from "../../services/sendEmail.js"
+import { sendEmailService } from "../../services/sendEmail.js"
 
 export const register = async (req, res, next) => {
 
@@ -287,7 +287,7 @@ export const forgetPassword = async (req, res, next) => {
     })
 
     // Create reset password link
-   const resetPasswordLink = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/en/reset-password/${token}`
+    const resetPasswordLink = `https://globaltechnova.com/en/reset-password/${token}`
 
     // Send email
     const isEmailSent = sendEmailService({
