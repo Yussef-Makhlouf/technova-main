@@ -88,7 +88,7 @@ export const createService = async (req, res, next) => {
 };
 export const getAllServices = async (req, res, next) => {
   try {
-    const services = await serviceModel.find().sort({ createdAt: -1 });
+    const services = await serviceModel.find().sort({ createdAt: 1 });
     return res.status(200).json({
       success: true,
       services,

@@ -86,7 +86,7 @@ export const createBlog = async (req, res, next) => {
 
 
 export const getAllBlogs = async (req, res, next) => {
-  const blogs = await BlogsModel.find().sort({ createdAt: -1 });
+  const blogs = await BlogsModel.find().sort({ createdAt: 1 });
   return res.status(200).json({
     success: true,
     blogs

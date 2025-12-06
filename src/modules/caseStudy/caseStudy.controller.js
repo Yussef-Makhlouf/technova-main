@@ -84,7 +84,7 @@ export const createCaseStudy = async (req, res, next) => {
 
 export const getAllCaseStudies = async (req, res, next) => {
   try {
-    const caseStudies = await caseStudyModel.find();
+    const caseStudies = await caseStudyModel.find().sort({ createdAt: 1 });
     return res.status(200).json({
       success: true,
       caseStudies

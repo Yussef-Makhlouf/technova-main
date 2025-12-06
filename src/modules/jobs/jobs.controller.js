@@ -45,7 +45,7 @@ export const createCareer = async (req, res, next) => {
 
 export const getCareers = async (req, res, next) => {
     try {
-        const careers = await careerModel.find();
+        const careers = await careerModel.find().sort({ createdAt: 1 });
 
 
         if (!careers) {
