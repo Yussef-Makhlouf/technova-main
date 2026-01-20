@@ -14,6 +14,7 @@ import { fileURLToPath } from "url";
 import caseStudyRouter from "./src/modules/caseStudy/caseStudy.routes.js";
 import careerRouter from "./src/modules/jobs/jobs.routes.js";
 import nfcRouter from "./src/modules/nfc/nfc.routes.js";
+import metaRouter from "./src/modules/meta/meta.routes.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -33,6 +34,7 @@ app.use('/api/v1/services', servicesRouter)
 app.use('/api/v1/case_study', caseStudyRouter)
 app.use('/api/v1/career', careerRouter)
 app.use('/api/v1/nfc', nfcRouter)
+app.use('/api/v1/meta', metaRouter)
 db;
 
 const swaggerSpec = swaggerJSDoc({
@@ -58,7 +60,8 @@ const swaggerSpec = swaggerJSDoc({
     path.join(__dirname, "./src/modules/blogs/blogs.routes.js"),
     path.join(__dirname, "./src/modules/services/services.router.js"),
     path.join(__dirname, "./src/modules/auth/auth.routes.js"),
-    path.join(__dirname, "./src/modules/contact_us/contact.routes.js")
+    path.join(__dirname, "./src/modules/contact_us/contact.routes.js"),
+    path.join(__dirname, "./src/modules/meta/meta.routes.js")
   ]
 });
 
