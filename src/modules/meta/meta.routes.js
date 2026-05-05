@@ -1,6 +1,5 @@
 
 import { Router } from "express";
-import { MQ } from "../../utilities/mq.js"; // In case we want to use queue later, but for now direct import
 import { trackMetaEvent } from "./meta.controller.js";
 
 const metaRouter = Router();
