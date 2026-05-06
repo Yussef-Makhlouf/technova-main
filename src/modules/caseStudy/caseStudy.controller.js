@@ -147,7 +147,7 @@ export const updateCaseStudy = async (req, res, next) => {
       // Delete all old images from ImageKit
       if (caseStudy.images && caseStudy.images.length) {
         for (const img of caseStudy.images) {
-          await imagekit.deleteFile(img.public_id);
+          await destroyImage(img.public_id);
         }
       }
 

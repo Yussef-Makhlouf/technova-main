@@ -2,7 +2,7 @@ import { BlogsModel } from '../../DB/models/blogsModel.js';
 import { customAlphabet } from 'nanoid'
 const nanoid = customAlphabet('1234567890abcdefghijklmnopqrstuvwxyz', 5)
 import CustomError from "../../utilities/customError.js"
-import imagekit from '../../utilities/imagekitConfigration.js';
+import imagekit, { destroyImage } from '../../utilities/imagekitConfigration.js';
 
 export const createBlog = async (req, res, next) => {
   try {
@@ -122,7 +122,7 @@ export const updateBlog = async (req, res, next) => {
     // Delete all old images from ImageKit
     if (blog.images && blog.images.length) {
       for (const img of blog.images) {
-        await imagekit.deleteFile(img.public_id);
+        await destroyImage(img.public_id);
       }
     }
 
@@ -159,7 +159,7 @@ export const deleteBlog = async (req, res, next) => {
   // Delete images from ImageKit
   if (blog.images) {
     for (const img of blog.images) {
-      await imagekit.deleteFile(img.public_id);
+      await destroyImage(img.public_id);
     }
   }
   await BlogsModel.findByIdAndDelete(id);

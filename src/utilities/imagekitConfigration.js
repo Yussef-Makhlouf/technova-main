@@ -11,13 +11,24 @@ var imagekit = new ImageKit({
 
 
 export const destroyImage = async (fileId) => {
+    if (!fileId || fileId.startsWith('technova/services/srv-')) {
+      console.warn('Skipping deletion for invalid or placeholder fileId:', fileId);
+      return;
+    }
+
     try {
-      
-      const result = await imagekit.deleteFile(fileId);  // Delete the file using its fileId
-      // console.log('File deleted:', result);
+      const result = await imagekit.deleteFile(fileId);
+      console.log('File deleted from ImageKit:', fileId);
       return result;
     } catch (error) {
-      console.error('Error deleting file:', error);
+      // If the error is because the file was already deleted or doesn't exist, we can ignore it
+      if (error && (error.$metadata?.httpStatusCode === 404 || error.message?.includes('not found'))) {
+        console.warn('Image not found in ImageKit, skipping deletion:', fileId);
+        return;
+      }
+      
+      console.error('Error deleting file from ImageKit:', error);
+      // We still throw for other errors (like auth issues) so we know something is wrong
       throw new Error('Failed to delete image from ImageKit');
     }
   };
